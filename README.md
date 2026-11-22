@@ -3,7 +3,7 @@
 Личный дневник, в котором каждый день — разворот тетради и маленький фильм.
 Проект для хакатона ArtTech «Make the Invisible Visible».
 
-**Открыть:** https://anarabilimbayeva-stack.github.io/dnevnik-kino/
+**Открыть:** https://lya22at.github.io/tot-samyi-den/
 
 ## Как это работает
 

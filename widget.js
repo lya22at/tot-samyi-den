@@ -1,7 +1,7 @@
 // «Тот самый день» — виджет для Scriptable (iPhone)
 // Показывает один день из тетради: фото, дату, название папки и песню.
 // Если сегодня годовщина какого-то дня, показывает его. Нажатие открывает тетрадь.
-const BASE = "https://anarabilimbayeva-stack.github.io/dnevnik-kino/";
+const BASE = "https://lya22at.github.io/tot-samyi-den/";
 const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
 
 async function build() {

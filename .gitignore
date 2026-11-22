@@ -1,4 +1,2 @@
-node_modules/
-token.txt
-claude-key.txt
+bot/
 .DS_Store

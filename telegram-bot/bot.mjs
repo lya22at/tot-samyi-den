@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { storyboard } from "./nn.mjs";
 
 const TOKEN = (process.env.BOT_TOKEN || readFileSync(process.env.BOT_TOKEN_FILE || "./token.txt", "utf8")).trim();
-const SITE = process.env.SITE || "https://anarabilimbayeva-stack.github.io/dnevnik-kino/";
+const SITE = process.env.SITE || "https://lya22at.github.io/tot-samyi-den/";
 const RELAY = process.env.RELAY || "https://relay.62.238.3.191.sslip.io/";
 const API = `https://api.telegram.org/bot${TOKEN}/`, FILES = `https://api.telegram.org/file/bot${TOKEN}/`;
 const MAX_MEDIA = 10, MAX_BYTES = 11 * 1024 * 1024;
