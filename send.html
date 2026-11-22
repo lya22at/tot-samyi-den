@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фото для дневника</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Neucha&family=PT+Mono&display=swap">
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{background:#2a1a0e url(tex/wood.jpg) center/cover fixed;font-family:"Neucha",system-ui,sans-serif;color:#2a1d14;display:grid;place-items:center;padding:18px;min-height:100vh}
+.card{background:#f3ead8;padding:26px 22px 22px;width:min(100%,440px);display:grid;gap:14px;box-shadow:0 30px 50px rgba(0,0,0,.6);transform:rotate(-.6deg)}
+h1{margin:0;font-weight:400;font-size:30px;color:#c73e24}
+p{margin:0;font-size:20px;line-height:1.25}
+#msg{font-size:22px;min-height:2.4em}
+.pick{display:block;background:#15110e;color:#f2e6d0;font-family:"PT Mono",monospace;font-size:20px;letter-spacing:.06em;text-transform:uppercase;text-align:center;padding:20px 16px;cursor:pointer}
+.pick[hidden]{display:none}
+#bar{height:8px;background:#d9c9a8}#bar i{display:block;height:100%;width:0;background:#c73e24;transition:width .3s}
+#list{display:flex;gap:6px;flex-wrap:wrap}#list img{width:64px;height:64px;object-fit:cover;box-shadow:0 0 0 3px #fbf7ee,0 2px 4px rgba(0,0,0,.4)}
+small{font-family:"PT Mono",monospace;font-size:10px;letter-spacing:.1em;color:#8a7868}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>фото для дневника</h1>
+  <p id="msg">Выбери фото — они уйдут на компьютер, где открыт дневник.</p>
+  <label class="pick" id="pick"><input type="file" id="in" accept="image/*,video/*" multiple hidden>выбрать фото</label>
+  <div id="bar"><i></i></div>
+  <div id="list"></div>
+  <p>Когда всё отправится, эту страницу можно закрыть.</p>
+  <small id="ver">страница отправки · версия 9</small>
+</div>
+<script>
+const $=id=>document.getElementById(id),msg=t=>$("msg").textContent=t;
+const P=new URLSearchParams(location.search),T0=(P.get("t")||P.get("send")||"").split("."),TOPIC=T0[0],KEY=T0[1]||P.get("k")||location.hash.slice(1),OWN=T0[2]==="o",RELAY=OWN?"https://relay.62.238.3.191.sslip.io/":"https://ntfy.sh/",PART=OWN?12e6:1.8e6,CAP=OWN?250e6:17e6;
+const ub64=t=>Uint8Array.from(atob(t.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+async function exifDate(file){
+  try{const b=new DataView(await file.slice(0,262144).arrayBuffer());if(b.getUint16(0)===0xFFD8){let o=2;
+    while(o+4<b.byteLength){const mk=b.getUint16(o),len=b.getUint16(o+2);if(mk===0xFFE1&&b.getUint32(o+4)===0x45786966){const t=o+10,le=b.getUint16(t)===0x4949,u16=i=>b.getUint16(t+i,le),u32=i=>b.getUint32(t+i,le);
+        const read=(ifd,tags)=>{const n=u16(ifd),out={};for(let i=0;i<n;i++){const e=ifd+2+i*12,tag=u16(e);if(tags.includes(tag)){const cnt=u32(e+4),off=cnt>4?u32(e+8):e+8;
+            if(tag===0x8769)out[tag]=u32(e+8);else{let str="";for(let k=0;k<cnt-1;k++)str+=String.fromCharCode(b.getUint8(t+off+k));out[tag]=str}}}return out};
+        const i0=read(u32(4),[0x8769,0x0132]);let dt=i0[0x0132];if(i0[0x8769]){const ex=read(i0[0x8769],[0x9003]);if(ex[0x9003])dt=ex[0x9003]}
+        if(dt&&/^\d{4}:\d\d:\d\d/.test(dt))return dt.slice(0,10).replace(/:/g,"-");break}
+      if((mk&0xFF00)!==0xFF00)break;o+=2+len}}}catch(e){}
+  return null}
+
+async function seal(key,meta,buf){const m=new TextEncoder().encode(JSON.stringify(meta)),p=new Uint8Array(4+m.length+buf.byteLength);new DataView(p.buffer).setUint32(0,m.length);p.set(m,4);p.set(new Uint8Array(buf),4+m.length);
+  const iv=crypto.getRandomValues(new Uint8Array(12)),c=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},key,p)),o=new Uint8Array(12+c.length);o.set(iv);o.set(c,12);return o}
+/* уменьшаем фото через обычную картинку: так работает на любом телефоне и HEIC превращается в JPEG */
+function shrink(f){return new Promise(res=>{if(!f.type.startsWith("image"))return res(f);const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{try{const k=Math.min(1,1800/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement("canvas");c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(b=>res(b||f),"image/jpeg",.86)}catch(e){res(f)}};
+  im.onerror=()=>res(f);im.src=u})}
+/* видео с телефона слишком тяжёлое: проигрываем его в уменьшенный кадр и записываем заново (без звука — в фильме звучит песня) */
+function shrinkVideo(f){return new Promise(res=>{if(!f.type.startsWith("video")||!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)return res(f);
+  let done=false;const fin=b=>{if(!done){done=true;res(b)}},v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";setTimeout(()=>fin(f),90000);v.onerror=()=>fin(f);
+  v.onloadedmetadata=()=>{if(!v.videoWidth||v.duration>60){fin(f);return}const k=Math.min(1,720/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement("canvas");c.width=Math.round(v.videoWidth*k/2)*2;c.height=Math.round(v.videoHeight*k/2)*2;
+    const x=c.getContext("2d"),st=c.captureStream(30),mime=["video/mp4","video/webm;codecs=vp9","video/webm"].find(m=>MediaRecorder.isTypeSupported(m));let r;try{r=new MediaRecorder(st,{mimeType:mime,videoBitsPerSecond:900000})}catch(e){fin(f);return}
+    const ch=[];r.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};r.onstop=()=>{const b=new Blob(ch,{type:(mime||"video/mp4").split(";")[0]});fin(b.size>20000&&b.size<f.size?b:f)};
+    const draw=()=>{if(done||v.ended)return;x.drawImage(v,0,0,c.width,c.height);requestAnimationFrame(draw)};v.onended=()=>{try{r.stop()}catch(e){fin(f)}};
+    try{r.start(500)}catch(e){fin(f);return}v.play().then(draw).catch(()=>fin(f))};
+  v.src=URL.createObjectURL(f)})}
+(async()=>{
+  let key;
+  try{if(!TOPIC||!KEY)throw new Error("код сделан старой версией сайта: обнови страницу на компьютере и открой код заново");if(!window.crypto||!crypto.subtle)throw new Error("браузер не умеет шифровать");key=await crypto.subtle.importKey("raw",ub64(KEY),"AES-GCM",false,["encrypt"])}
+  catch(e){msg("Код прочитался не полностью ("+e.message+"). Открой код на компьютере заново и отсканируй ещё раз.");$("pick").hidden=true;return}
+  fetch(RELAY+TOPIC,{method:"POST",body:"телефон подключился"}).then(r=>{if(!r.ok)msg("Сервис пересылки ответил ошибкой "+r.status+". Попробуй через минуту.")}).catch(()=>msg("Нет связи с интернетом на телефоне."));
+  let sent=0,bad=0,why="";
+  $("in").onchange=async()=>{const fs=[...$("in").files];let exif=null,k=0;$("pick").hidden=true;
+    for(const f of fs){k++;msg("отправляю "+k+" из "+fs.length+"…");$("bar").firstChild.style.width=((k-.5)/fs.length*100)+"%";
+      try{if(f.type.startsWith("image")&&!exif)exif=await exifDate(f);
+        if(f.type.startsWith("video")&&!OWN)msg("сжимаю видео "+k+" из "+fs.length+"… это займёт столько же, сколько оно длится");
+        /* через свой сервис видео идёт как есть: перезапись на телефоне давала чёрные кадры */
+        const b=f.type.startsWith("video")?(OWN?f:await shrinkVideo(f)):await shrink(f);if(b.size>CAP){bad++;why="видео слишком длинное для отправки с телефона — добавь его файлом на компьютере";continue}
+        /* сервис пересылки принимает куски до 2 МБ: большой файл уходит частями, компьютер склеивает их обратно */
+        const name=f.name.replace(/\.[^.]+$/,"")+(b===f?(f.name.match(/\.[^.]+$/)||[""])[0]:/webm/.test(b.type)?".webm":/mp4/.test(b.type)?".mp4":".jpg"),CH=PART,parts=Math.max(1,Math.ceil(b.size/CH)),fid=Math.random().toString(36).slice(2);
+        for(let i=0;i<parts;i++){if(parts>1)msg("отправляю "+k+" из "+fs.length+": часть "+(i+1)+" из "+parts+"…");
+          const body=await seal(key,{name,mime:b.type||f.type||"image/jpeg",exif,fid,part:i,parts},await b.slice(i*CH,(i+1)*CH).arrayBuffer());
+          let ok=false,err="";for(let t=0;t<3&&!ok;t++){try{const r=await fetch(RELAY+TOPIC,{method:"PUT",headers:{Filename:"p.bin"},body});if(r.ok)ok=true;else{err=r.status===413?"сервис пересылки принимает около 20 МБ за три часа с одного телефона, лимит исчерпан — остальное добавь файлом на компьютере":"ошибка "+r.status;if(r.status===413)break;if(r.status===429)await new Promise(z=>setTimeout(z,4000))}}catch(e){err="нет связи"}}
+          if(!ok)throw new Error(err)}
+        sent++;
+        if((b.type||"").startsWith("image")){const i=new Image();i.src=URL.createObjectURL(b);$("list").append(i)}}
+      catch(e){bad++;why=e.message||"нет связи"}
+      $("bar").firstChild.style.width=(k/fs.length*100)+"%"}
+    msg("Отправлено: "+sent+"."+(bad?" Не отправилось: "+bad+" ("+why+").":" Посмотри на компьютер. Можно выбрать ещё."));$("pick").hidden=false;$("in").value=""}
+})();
+</script>
+</body>
+</html>

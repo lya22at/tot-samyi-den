@@ -1,0 +1,15 @@
+services:
+  tsd-bot:
+    image: node:20-alpine
+    container_name: tsd-bot
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "bot.mjs"]
+    environment:
+      BOT_TOKEN_FILE: /app/token.txt
+      CLAUDE_KEY_FILE: /app/claude-key.txt
+    volumes:
+      - ./:/app:ro
+    mem_limit: 192m
+    logging:
+      options: { max-size: "2m", max-file: "2" }

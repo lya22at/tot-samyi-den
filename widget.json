@@ -1,0 +1,67 @@
+{
+ "days": [
+  {
+   "date": "2026-06-18",
+   "title": "Летний день на баттлах в Китае",
+   "paper": "#979a76",
+   "ink": "#1d1a14",
+   "pname": "тёплая бумага",
+   "song": "Sunflower — Post Malone & Swae Lee",
+   "photo": "demo/r1/p7.jpg"
+  },
+  {
+   "date": "2026-07-21",
+   "title": "Летний день у моря с друзьями",
+   "paper": "#cf4428",
+   "ink": "#fdf0dc",
+   "pname": "яркая бумага",
+   "song": "Good Time — Owl City & Carly Rae Jepsen",
+   "photo": "demo/real/sea1.jpg"
+  },
+  {
+   "date": "2026-10-09",
+   "title": "Осенний вечер у окна с подругой",
+   "paper": "#cf4428",
+   "ink": "#fdf0dc",
+   "pname": "яркая бумага",
+   "song": "Bad Blood — Taylor Swift",
+   "photo": "mood/swing.jpg"
+  },
+  {
+   "date": "2026-10-12",
+   "title": "Осенний день в парке с мамой",
+   "paper": "#979a76",
+   "ink": "#1d1a14",
+   "pname": "тёплая бумага",
+   "song": "Autumn Leaves — Frank Sinatra",
+   "photo": "demo/real/park1.jpg"
+  },
+  {
+   "date": "2026-11-03",
+   "title": "Осенняя ночь перед сдачей в городе",
+   "paper": "#191411",
+   "ink": "#f2e6d0",
+   "pname": "громкая бумага",
+   "song": "Blinding Lights — The Weeknd",
+   "photo": "demo/real/night1.jpg"
+  },
+  {
+   "date": "2026-11-15",
+   "title": "Осенний вечер в городе с подругой",
+   "paper": "#566a82",
+   "ink": "#f3ebdd",
+   "pname": "тихая бумага",
+   "song": "when the party's over — Billie Eilish",
+   "photo": "demo/real/rain1.jpg"
+  },
+  {
+   "date": "2026-11-18",
+   "title": "Осенний вечер дома с подругой и чай",
+   "paper": "#979a76",
+   "ink": "#1d1a14",
+   "pname": "тёплая бумага",
+   "song": "Count on Me — Bruno Mars",
+   "photo": "mood/home.jpg"
+  }
+ ]
+}
